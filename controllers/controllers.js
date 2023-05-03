@@ -1,70 +1,120 @@
-const fs = require('fs');
 const Tour = require('./../models/models.js');
+const APIFeatures = require('./../utils/api-features.js');
 
-const testTour = new Tour({
-  name: 'The Snow adventure',
-  price: 989,
-});
-// testTour
-//   .save()
-//   .then(function (doc) {
-//     console.log(doc);
-//   })
-//   .catch(function (err) {
-//     console.log(err);
-//   });
-
-// const tours = JSON.parse(
-//   fs.readFileSync(`${__dirname}./../dev-data/data/tours-simple.json`)
-// );
-
-// exports.checkBody = (req, res, next) => {
-//   if (!req.body.name || !req.body.price) {
-//     return res.status(400).json({
-//       status: 'fail',
-//       message: 'Missng name or price',
-//     });
-//   }
-//   next();
-};
 //Now we no longer need to check the ID in every handler function.
-// exports.checkId = (req, res, next, val) => {
-//   console.log(`Param middleware function id: ${val}`);
-//   if (req.params.id * 1 > tours.length) {
-//     return res.status(404).json({
-//       status: 'fail',
-//       message: 'invalid ID',
-//     });
-//   }
-//   next();
-// };
-
-exports.getAllTours = (req, res) => {
-  res.status(200).json({
-    status: 'Success',
-    result: tours.length,
-    requestedTime: req.requestedTime,
-    data: {
-      tours,
-    },
-  });
+exports.checkId = async (req, res, next, val) => {
+  console.log(`Router Param middleware function id: ${val}`);
+  const tour = await Tour.findById(val);
+  if (!tour) {
+    return res.status(404).json({
+      status: 'fail',
+      message: 'invalid ID',
+    });
+  }
+  next();
 };
 
-exports.createTour = (req, res) => {
-  //console.log(req.body);
+//Alias middleware function for top 5 tours
+exports.aliasTopTours = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = 'ratingsAverage, price';
+  req.query.fields = 'name, price, ratingsAverage, summary, difficulty';
+  // res.send('Welcome to top five cheap tours, ah haa');
 
+  next();
 };
 
-exports.getTour = (req, res) => {
+exports.getAllTours = async (req, res) => {
+  try {
+    //EXCUTE QUERY
+    let features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .fields()
+      .paginate();
 
+    const tours = await features.query;
+    //SEND RESPONSE
+
+    res.status(200).json({
+      status: 'Success',
+      result: tours.length,
+      requestedTime: requestedTime,
+      data: {
+        tours,
+      },
+    });
+  } catch (err) {
+    return res.status(404).json({
+      status: 'fail',
+      message: err,
+    });
+  }
 };
 
-exports.updateTour = function (req, res) {
-
+exports.createTour = async (req, res) => {
+  try {
+    const tour = await Tour.create(req.body);
+    return res.status(200).json({
+      status: 'success',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    return res.status(404).json({
+      status: 'fail',
+      message: err,
+    });
+  }
 };
 
-exports.deleteTour = function (req, res) {
+exports.getTour = async (req, res) => {
+  try {
+    const tour = await Tour.findById(req.params.id);
+    return res.status(200).json({
+      status: 'success',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.send(err);
+  }
+};
 
+exports.updateTour = async function (req, res) {
+  try {
+    const tour = await Tour.findOneAndUpdate(
+      { _id: req.params.id }, //here we can also use req.body.params, req.body i,e withour passing the objects;
+      { $set: req.body },
+      { new: true }, //this will return the new updated doc in tour variable;
+      { runValidators: true } //will run and update all the validators against tour schema
+    );
+    return res.status(200).json({
+      status: 'Successfully updated',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.send(err);
+  }
+};
+
+exports.deleteTour = async function (req, res) {
+  try {
+    const tour = await Tour.deleteOne({ _id: req.params.id });
+    console.log(tour);
+    res.status(200).json({
+      status: 'Successfully deleted the document:',
+      data: {
+        tour,
+      },
+    });
+  } catch (err) {
+    res.send(err);
+  }
 };
 
 exports.getAllUsers = function (req, res) {

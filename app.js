@@ -15,8 +15,8 @@ app.use(express.json());
 app.use(express.static(`${__dirname}/public`));
 
 app.use(function (req, res, next) {
-  req.requestedTime = new Date().toISOString();
-  console.log(req.requestedTime);
+  requestedTime = new Date().toISOString();
+  console.log(requestedTime);
   next();
 });
 

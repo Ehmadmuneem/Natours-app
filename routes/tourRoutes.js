@@ -3,7 +3,11 @@ const router = express.Router();
 const tourController = require('./../controllers/controllers');
 
 //param midlleware function.
-// router.param('id', tourController.checkId);
+router.param('id', tourController.checkId);
+router
+  .route('/top-5-cheap')
+  //Middleware chaining
+  .get(tourController.aliasTopTours, tourController.getAllTours);
 
 router
   .route('/')
