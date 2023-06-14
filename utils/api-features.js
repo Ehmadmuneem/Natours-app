@@ -7,7 +7,7 @@ class APIFeatures {
 
   filter() {
     const queryObj = { ...this.queryString }; //this is because when we delete fields from queryObj, req.query will remain same
-    const excludedFields = ['page', 'sort', 'page', 'limit', 'fields'];
+    const excludedFields = ['sort', 'page', 'limit', 'fields'];
 
     excludedFields.forEach(function (el) {
       delete queryObj[el]; //will delete all the queries of page, sort, limit and fields in query object
@@ -26,7 +26,9 @@ class APIFeatures {
   sort() {
     if (this.queryString.sort) {
       console.log(this.queryString);
+      console.log(this.queryString.sort);
       const sortStr = this.queryString.sort.split(',').join(' ');
+
       console.log(sortStr);
 
       // query = query.sort(sortStr);
@@ -39,7 +41,11 @@ class APIFeatures {
   fields() {
     // 4)Field limiting
     if (this.queryString.fields) {
+      console.log(this.queryString.fields);
       const fieldStr = this.queryString.fields.split(',').join(' ');
+      //   console.log(fieldStr);
+
+      console.log(fieldStr);
 
       // query = query.select(fieldStr);
       this.query = this.query.select(fieldStr);
@@ -51,7 +57,7 @@ class APIFeatures {
   paginate() {
     // 5) Pagination
     const page = this.queryString.page * 1 || 1; //Page number a user wants to get
-    const limit = this.queryString.limit * 1 || 3; //Number of results or docs a user wants to seek;
+    const limit = this.queryString.limit * 1; //Number of results or docs a user wants to seek;
     //console.log(req.query);
     const skip = (page - 1) * limit;
     //console.log(skip);
